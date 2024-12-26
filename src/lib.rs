@@ -174,7 +174,7 @@ fn handle_message<S, T1, T2, T3>(
 {
     if message.is_local(our) {
         // handle local messages
-        if message.source().process == "http_server:distro:sys" {
+        if message.source().process == "http-server:distro:sys" {
             http_request(message, state, server, handle_api_call);
         } else {
             local_request(message, state, server, handle_local_request);
