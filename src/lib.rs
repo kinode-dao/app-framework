@@ -1,6 +1,19 @@
 pub use kinode_process_lib::*;
 pub use process_macros::*;
 
+/// Macro for creating a single request enum to handle all request types
+/// that this app will receive.
+#[macro_export]
+macro_rules! req {
+    ($(($name:ident, $variant:path)),*) => {
+        #[derive(Debug, Deserialize, Serialize)]
+        #[serde(untagged)]
+        enum Req {
+            $($name($variant)),*
+        }
+    }
+}
+
 /// Macro for creating a standard Kinode application structure
 ///
 /// Takes an app name, icon, widget, and 2 or 3 handler functions to create a basic
