@@ -32,9 +32,8 @@ macro_rules! app {
     ($app_name:expr, $app_icon:expr, $app_widget:expr, $f1:ident, $f2:ident) => {
         struct Component;
         impl Guest for Component {
-            fn init(our: String) {
-                let our: Address = our.parse().unwrap();
-                let init = app(
+            fn init(_our: String) {
+                app(
                     $app_name,
                     $app_icon,
                     $app_widget,
@@ -43,7 +42,6 @@ macro_rules! app {
                     $f2,
                     |_, _, _| {},
                 );
-                init(our);
             }
         }
         export!(Component);
@@ -51,9 +49,8 @@ macro_rules! app {
     ($app_name:expr, $app_icon:expr, $app_widget:expr, $f1:ident, $f2:ident, $f3:ident) => {
         struct Component;
         impl Guest for Component {
-            fn init(our: String) {
-                let our: Address = our.parse().unwrap();
-                let init = app(
+            fn init(_our: String) {
+                app(
                     $app_name,
                     $app_icon,
                     $app_widget,
@@ -62,7 +59,6 @@ macro_rules! app {
                     $f3,
                     |_, _, _| {},
                 );
-                init(our);
             }
         }
         export!(Component);
@@ -70,10 +66,8 @@ macro_rules! app {
     ($app_name:expr, $app_icon:expr, $app_widget:expr, $f1:ident, $f2:ident, $f3:ident, $f4:ident) => {
         struct Component;
         impl Guest for Component {
-            fn init(our: String) {
-                let our: Address = our.parse().unwrap();
-                let init = app($app_name, $app_icon, $app_widget, $f1, $f2, $f3, $f4);
-                init(our);
+            fn init(_our: String) {
+                app($app_name, $app_icon, $app_widget, $f1, $f2, $f3, $f4);
             }
         }
         export!(Component);
@@ -108,53 +102,48 @@ pub fn app<S, T1, T2, T3>(
     handle_local_request: impl Fn(&Message, &mut S, &mut http::server::HttpServer, T2),
     handle_remote_request: impl Fn(&Message, &mut S, &mut http::server::HttpServer, T3),
     handle_send_error: impl Fn(&mut S, &mut http::server::HttpServer, SendError),
-) -> impl Fn(Address)
-where
+) where
     S: State + std::fmt::Debug + serde::Serialize + serde::de::DeserializeOwned,
     T1: serde::Serialize + serde::de::DeserializeOwned,
     T2: serde::Serialize + serde::de::DeserializeOwned,
     T3: serde::Serialize + serde::de::DeserializeOwned,
 {
     homepage::add_to_homepage(app_name, app_icon, Some("/"), app_widget);
-    move |our: Address| {
-        let mut server = http::server::HttpServer::new(5);
+    let mut server = http::server::HttpServer::new(5);
 
-        server
+    server
             .serve_ui(
-                &our,
                 "ui",
                 vec!["/"],
                 http::server::HttpBindingConfig::default(),
             )
             .expect("failed to serve UI. do you have messaging capabilities to/from http-server:distro:sys?");
 
-        server
-            .bind_http_path("/api", http::server::HttpBindingConfig::default())
-            .expect("failed to serve API path");
+    server
+        .bind_http_path("/api", http::server::HttpBindingConfig::default())
+        .expect("failed to serve API path");
 
-        server
-            .bind_ws_path("/updates", http::server::WsBindingConfig::default())
-            .expect("failed to bind WS path");
+    server
+        .bind_ws_path("/updates", http::server::WsBindingConfig::default())
+        .expect("failed to bind WS path");
 
-        let mut state = get_typed_state(|bytes| serde_json::from_slice(bytes)).unwrap_or({
-            let state = S::new();
-            set_state(&serde_json::to_vec(&state).expect("failed to serialize state to bytes"));
-            state
-        });
+    let mut state = get_typed_state(|bytes| serde_json::from_slice(bytes)).unwrap_or({
+        let state = S::new();
+        set_state(&serde_json::to_vec(&state).expect("failed to serialize state to bytes"));
+        state
+    });
 
-        loop {
-            match await_message() {
-                Err(send_error) => handle_send_error(&mut state, &mut server, send_error),
-                Ok(ref message) => handle_message(
-                    &our,
-                    &mut state,
-                    message,
-                    &mut server,
-                    &handle_api_call,
-                    &handle_local_request,
-                    &handle_remote_request,
-                ),
-            }
+    loop {
+        match await_message() {
+            Err(send_error) => handle_send_error(&mut state, &mut server, send_error),
+            Ok(ref message) => handle_message(
+                &mut state,
+                message,
+                &mut server,
+                &handle_api_call,
+                &handle_local_request,
+                &handle_remote_request,
+            ),
         }
     }
 }
@@ -172,7 +161,6 @@ where
 /// * `handle_api_call` - Function to handle API calls
 /// * `handle_remote_request` - Function to handle remote requests
 fn handle_message<S, T1, T2, T3>(
-    our: &Address,
     state: &mut S,
     message: &Message,
     server: &mut http::server::HttpServer,
@@ -185,7 +173,7 @@ fn handle_message<S, T1, T2, T3>(
     T2: serde::Serialize + serde::de::DeserializeOwned,
     T3: serde::Serialize + serde::de::DeserializeOwned,
 {
-    if message.is_local(our) {
+    if message.is_local() {
         // handle local messages
         if message.source().process == "http-server:distro:sys" {
             http_request(message, state, server, handle_api_call);
