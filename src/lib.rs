@@ -1,4 +1,4 @@
-pub use kinode_process_lib::*;
+pub use hyperware_process_lib::*;
 pub use process_macros::*;
 
 /// Macro for creating a single request enum to handle all request types
@@ -14,7 +14,7 @@ macro_rules! req {
     }
 }
 
-/// Macro for creating a standard Kinode application structure
+/// Macro for creating a standard Hyperware application structure
 ///
 /// Takes an app name, icon, widget, and 2 or 3 handler functions to create a basic
 /// application component that implements the Guest trait.
@@ -80,7 +80,7 @@ pub trait State {
     fn new() -> Self;
 }
 
-/// Creates a standard Kinode application with HTTP server and WebSocket support
+/// Creates a standard Hyperware application with HTTP server and WebSocket support
 ///
 /// # Type Parameters
 /// - `S`: Application state type that implements State + Serialize + Deserialize
@@ -154,7 +154,6 @@ pub fn app<S, T1, T2, T3>(
 /// remote messages to the remote request handler.
 ///
 /// # Arguments
-/// * `our` - This process's address
 /// * `state` - Mutable reference to application state
 /// * `message` - The incoming message to handle
 /// * `server` - Mutable reference to the HTTP server

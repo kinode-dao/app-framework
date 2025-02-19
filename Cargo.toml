@@ -1,13 +1,13 @@
 [package]
-name = "kinode-app-framework"
+name = "hyperware-app-framework"
 version = "0.1.0"
 edition = "2021"
 authors = ["dr-frmr <ben@kinode.org>"]
 
 [dependencies]
 anyhow = "1.0"
-kinode_process_lib = { git = "https://github.com/kinode-dao/process_lib", rev = "faddb99" }
+hyperware_process_lib = "1.0.3"
 process_macros = "0.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-wit-bindgen = "0.24.0"
+wit-bindgen = "0.36.0"
